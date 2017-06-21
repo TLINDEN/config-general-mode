@@ -34,24 +34,39 @@
 
 ;;; Code:
 
+;;;; Dependencies
+
 (require 'sh-script)
 (require 'cc-mode)
 
 ;;;; Customizables
-(defconst config-general-mode-version "0.01" "Config::General mode version")
+
+;; none yet
+(defgroup config-general nil
+  "Config::General config file mode."
+  :prefix "config-general-"
+  :group 'conf)
 
 ;;;; Global Vars
+(defconst config-general-mode-version "0.01" "Config::General mode version")
+
 (defvar config-general-font-lock-keywords nil
   "Keywords to highlight in CG mode.")
 
 (defvar config-general-mode-abbrev-table nil)
+
+(defvar config-general-imenu-expression
+  '(
+    ("Blocks"  "^ *<\\([a-zA-Z0-9]+.*\\)>" 1 ))
+  "Imenu generic expression for Config:General mode.  See `imenu-generic-expression'.")
+
 
 ;;;; Public Functions
 
 (defun config-general-reload()
   (interactive)
   (unload-feature 'config-general-mode)
-  (require 'config-general-mode)
+  (require 'config-general)
   (config-general-mode))
 
 (defun config-general-align-vars (beg end)
@@ -106,12 +121,9 @@
   (set (make-local-variable 'font-lock-defaults)
        '(config-general-font-lock-keywords nil t nil nil))
 
-  (copy-face 'font-lock-constant-face 'cg-eof-face)
-  (copy-face 'font-lock-string-face 'cg-heredoc-face)
-  
   (font-lock-add-keywords nil
-                          '((config-general--fl-beg-eof . 'cg-eof-face)
-                            (config-general--fl-end-eof . 'cg-eof-face))))
+                          '((config-general--fl-beg-eof . 'font-lock-constant-face)
+                            (config-general--fl-end-eof . 'font-lock-constant-face))))
 
 (defun config-general--init-minors ()
   ;; enable simple outlining
@@ -130,7 +142,7 @@
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-7") 'sh-backslash-region) ;; for latin keyboards 
     (define-key map (kbd "C-c C-/") 'sh-backslash-region)
-    (define-key map (kbd "C-c C-0") 'config-general-align-vars)
+    (define-key map (kbd "C-c C-0") 'config-general-align-vars) ;; for latin keyboards
     (define-key map (kbd "C-c C-=") 'config-general-align-vars)
     (define-key map [remap delete-backward-char] 'backward-delete-char-untabify)
     map)
@@ -139,7 +151,8 @@
 
 ;;;###autoload
 (define-derived-mode config-general-mode conf-mode "config-general"
-  "Config::General config file mode"
+  "Config::General config file mode.
+\\{config-general-mode-map}"
 
   ;; prepare clean startup
   (kill-all-local-variables)
@@ -159,14 +172,31 @@
   ;; load keymap
   (use-local-map config-general-mode-map)
 
+  ;; de-activate some (for C::G) senseless bindings
+  (local-unset-key (kbd "C-c C-c"))
+  (local-unset-key (kbd "C-c C-j"))
+  (local-unset-key (kbd "C-c C-p"))
+  (local-unset-key (kbd "C-c C-u"))
+  (local-unset-key (kbd "C-c C-w"))
+  (local-unset-key (kbd "C-c C-x"))
+  (local-unset-key (kbd "C-c :"))
+
+  ;; imenu
+  (make-local-variable 'imenu-generic-expression)
+  (setq imenu-generic-expression config-general-imenu-expression)
+  (setq imenu-case-fold-search nil)
+  (require 'imenu)
+
+  ;; make us known correctly
+  (setq major-mode 'config-general-mode)
+  (setq mode-name "C::G")
+
   ;; eval hooks, if any
   (run-mode-hooks 'config-general-mode-hooks))
 
 
 
-;; see also https://futureboy.us/frinktools/emacs/frink-mode.el
-;; font-lock-default-fontify-buffer
-
-;; back-to-indentation
-
+;; done
 (provide 'config-general-mode)
+
+;;; config-general-mode.el ends here
