@@ -145,7 +145,7 @@
   (kill-all-local-variables)
 
   ;; support for 'comment-region et al
-  (setq-local comment-start "; ")
+  (setq-local comment-start "# ")
   (setq-local comment-end "")
 
   ;; we don't need a complicated indent strategy, relative is totally ok
