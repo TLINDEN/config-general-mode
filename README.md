@@ -39,7 +39,17 @@ You can also enable it with  a buffer-local variable by adding this as
 the first line of a config file:
 
     # -*-config-general-*-
-    
+
+### Usage
+
+Edit your config  file as usual. Use <kbd>tab</kbd>  for completion of
+values and  variables. Use  <kbd>C-c C-t</kbd>  to toggle  flags (like
+true to  false). Use <kbd>C-c  C-=</kbd> on a region  to automatically
+align on the `=` character. Use <kbd>C-c C-/</kbd> to breakup a region
+with  long lines  into  shorter ones  using  backslash notation.   Use
+<kbd>C-return</kbd> to visit an included file  or (when not on a link)
+insert a new line below the current one, indent and move point there.
+
 ### Customize
 
 You can customize the mode with:
