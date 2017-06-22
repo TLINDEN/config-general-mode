@@ -58,6 +58,19 @@
   :group 'config-general
   :type 'boolean)
 
+(defcustom config-general-toggle-values
+  '(("true"    . "false")
+    ("false"   . "true")
+    ("on"      . "off")
+    ("off"     . "on")
+    ("yes"     . "no")
+    ("no"      . "yes")
+    ("enable"  . "disable")
+    ("disable" . "enable"))
+  "Values which can be toggled, for simplicity's sake, add both values."
+  :group 'config-general
+  :type 'list)
+
 ;; faces
 (defface config-general-file-face
    '((t (:inherit link)))
@@ -116,15 +129,21 @@
 ;;;; Public Functions
 
 (defun config-general-reload()
+  "Simple mode reloader"
   (interactive)
   (fundamental-mode)
   (config-general-mode))
 
 (defun config-general-align-vars (beg end)
+  "Automatically align variable  assignments inside region marked
+with BEG and END based on the = character."
   (interactive "r")
   (align-regexp beg end "\\(\\s-*\\)=" 1 1 nil))
 
 (defun config-general-do-electric-return ()
+  "If    (point)    is    on   an    include    filename,    call
+`find-file-at-point'  with it,  otherwise add  a new  line below,
+indent it and move (point) there."
   (interactive)
   (if (eq config-general-electric-return t)
       (if (eq (get-text-property (point)'face) 'config-general-file-face)
@@ -133,10 +152,29 @@
     (newline)))
 
 (defun config-general-open-line-below ()
+  "Add a new line below, indent it and move (point) there."
   (interactive)
   (end-of-line)
   (newline-and-indent))
 
+(defun config-general-tab-or-complete ()
+  "Enter a <TAB> or do a dabbrev completion based on (point) position."
+  (interactive)
+  (if (looking-back "[-%$_a-zA-Z0-9]")
+      (dabbrev-completion)
+    (indent-for-tab-command)))
+
+(defun config-general-toggle-flag ()
+  "Toggle a value of the list `config-general-toggle-values'."
+  (interactive)
+  (let* ((thing (downcase (thing-at-point 'word t)))
+         (flag (assoc thing config-general-toggle-values))
+         (A (car (bounds-of-thing-at-point 'word)))
+         (B (cdr (bounds-of-thing-at-point 'word))))
+    (when (and thing flag)
+        (goto-char B)
+        (backward-kill-word 1)
+        (insert (cdr flag)))))
 
 ;;;; Internal Functions
 
@@ -218,12 +256,14 @@
 ;;;###autoload
 (defvar config-general-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-7") 'sh-backslash-region) ;; for latin keyboards 
-    (define-key map (kbd "C-c C-/") 'sh-backslash-region)
-    (define-key map (kbd "C-c C-0") 'config-general-align-vars) ;; for latin keyboards
-    (define-key map (kbd "C-c C-=") 'config-general-align-vars)
-    (define-key map (kbd "C-c C-f") 'find-file-at-point) ;; FIXME: change to [follow-link]
-    (define-key map (kbd "<C-return>")   'config-general-do-electric-return)
+    (define-key map (kbd "C-c C-7")              'sh-backslash-region) ;; for latin keyboards 
+    (define-key map (kbd "C-c C-/")              'sh-backslash-region)
+    (define-key map (kbd "C-c C-0")              'config-general-align-vars) ;; for latin keyboards
+    (define-key map (kbd "C-c C-=")              'config-general-align-vars)
+    (define-key map (kbd "C-c C-f")              'find-file-at-point) ;; FIXME: change to [follow-link]
+    (define-key map (kbd "C-c C-t")              'config-general-toggle-flag)
+    (define-key map (kbd "<C-return>")           'config-general-do-electric-return)
+    (define-key map (kbd "<tab>")                'config-general-tab-or-complete)
     (define-key map [remap delete-backward-char] 'backward-delete-char-untabify)
     map)
   "Keymap used in Config::General mode."
