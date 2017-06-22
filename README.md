@@ -16,11 +16,11 @@ makes it easier to edit such config files with emacs.
 It is based on `conf-mode` with the following features:
 
 - good syntax highlighting for config files
-- completion support with <kbd><tab></kbd> (using `dabbrev`)
+- completion support with <kbd>tab</kbd> (using `dabbrev`)
 - imenu support for `<blocks>`
 - electric paring mode (for quotes, parens, etc) enabled
 - automatic indenting
-- jump to include file with <kbd><ret></kbd>
+- jump to include file with <kbd>return</kbd>
 
 ### Installation
 
