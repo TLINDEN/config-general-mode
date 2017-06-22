@@ -41,11 +41,64 @@
 
 ;;;; Customizables
 
-;; none yet
+;; our group
 (defgroup config-general nil
   "Config::General config file mode."
   :prefix "config-general-"
   :group 'conf)
+
+(defgroup config-general-faces nil
+  "Config::General config file mode faces."
+  :prefix "config-general-"
+  :group 'faces)
+
+;; vars
+(defcustom config-general-electric-return t
+  "Enable electric return and follow include files."
+  :group 'config-general
+  :type 'boolean)
+
+;; faces
+(defface config-general-file-face
+   '((t (:inherit link)))
+  "face for include files"
+  :group 'config-general-faces)
+
+(defface config-general-constant-face
+  '((t (:inherit font-lock-constant-face)))
+  "face for include files"
+  :group 'config-general-faces)
+
+(defface config-general-special-char-face
+  '((t (:inherit font-lock-regexp-grouping-backslash)))
+  "face for special characters like < or |"
+  :group 'config-general-faces)
+
+(defface config-general-keyword-face
+  '((t (:inherit font-lock-keyword-face))) ;; maybe type?
+  "face for special keywords like include"
+  :group 'config-general-faces)
+
+(defface config-general-blockname-face
+  '((t (:inherit font-lock-function-name-face)))
+  "face for block names"
+  :group 'config-general-faces)
+
+(defface config-general-variable-name-face
+  '((t (:inherit font-lock-variable-name-face)))
+  "face for variable name definitions"
+  :group 'config-general-faces)
+
+(defface config-general-interpolating-variable-face
+  '((t (:inherit font-lock-constant-face)))
+  "face for variable name definitions"
+  :group 'config-general-faces)
+
+(defface config-general-escape-char-face
+  '((t (:inherit font-lock-warning-face)))
+  "face for escape chars"
+  :group 'config-general-faces)
+
 
 ;;;; Global Vars
 (defconst config-general-mode-version "0.01" "Config::General mode version")
@@ -60,18 +113,30 @@
     ("Blocks"  "^ *<\\([a-zA-Z0-9]+.*\\)>" 1 ))
   "Imenu generic expression for Config:General mode.  See `imenu-generic-expression'.")
 
-
 ;;;; Public Functions
 
 (defun config-general-reload()
   (interactive)
-  (unload-feature 'config-general-mode)
-  (require 'config-general)
+  (fundamental-mode)
   (config-general-mode))
 
 (defun config-general-align-vars (beg end)
   (interactive "r")
   (align-regexp beg end "\\(\\s-*\\)=" 1 1 nil))
+
+(defun config-general-do-electric-return ()
+  (interactive)
+  (if (eq config-general-electric-return t)
+      (if (eq (get-text-property (point)'face) 'config-general-file-face)
+          (find-file-at-point)
+        (config-general-open-line-below))
+    (newline)))
+
+(defun config-general-open-line-below ()
+  (interactive)
+  (end-of-line)
+  (newline-and-indent))
+
 
 ;;;; Internal Functions
 
@@ -100,21 +165,34 @@
     ;; better suited to configs
   (setq config-general-font-lock-keywords
         '(
-          ;; <block ..> (do this first because it may look like a parameter)
-          ("^\s*</*\\(.+\\)>" 1 'font-lock-function-name-face)
+          ;; <>
+          ("\\([<>|]+\\)" 1 'config-general-special-char-face)
+          
+          ;; <<include ...>>
+          ("^[ \t]*<<\\(include\\) [ \t]*\\(.+?\\)>>*"
+           (1 'config-general-constant-face)
+           (2 'config-general-file-face)) ;; FIXME: turn into real link property!
 
-          ;; var=val or var[index]=val
-          ("^[ \t]*\\(.+?\\)\\(?:\\[\\(.*?\\)\\]\\)?[ \t]*="
-           (1 'font-lock-variable-name-face)
-           (2 'font-lock-constant-face nil t))
+          ;; include ...
+          ("^[ \t]*\\(include\\) [ \t]*\\(.*\\)"
+           (1 'config-general-constant-face)
+           (2 'config-general-file-face))
+          
+          ;; <block ..>
+          ("^\s*</*\\(.+\\)>" 1 'config-general-blockname-face)
 
-          ;; variables
+          ;; variable definitions
+          ;; FIXME: add support for -SplitPolicy and -SplitDelimiter and make
+          ;; the = a customizable variable, if possible
+          ("^[ \t]*\\(.+?\\)[ \t]*="
+           (1 'config-general-variable-name-face))
+          
+          ;; interpolating variables
           ("\\$\\({#?\\)?\\([[:alpha:]_][[:alnum:]_]*\\|[-#?@!]\\)"
-           (2 'font-lock-variable-name-face))
+           (2 'config-general-interpolating-variable-face))
 
           ;; escape char
-          ("\\(\\\\\\)"
-           (1 'font-lock-warning-face))
+          ("\\(\\\\\\)" (1 'config-general-escape-char-face))
 
           ))
         
@@ -122,8 +200,8 @@
        '(config-general-font-lock-keywords nil t nil nil))
 
   (font-lock-add-keywords nil
-                          '((config-general--fl-beg-eof . 'font-lock-constant-face)
-                            (config-general--fl-end-eof . 'font-lock-constant-face))))
+                          '((config-general--fl-beg-eof . 'config-general-constant-face)
+                            (config-general--fl-end-eof . 'config-general-constant-face))))
 
 (defun config-general--init-minors ()
   ;; enable simple outlining
@@ -144,6 +222,8 @@
     (define-key map (kbd "C-c C-/") 'sh-backslash-region)
     (define-key map (kbd "C-c C-0") 'config-general-align-vars) ;; for latin keyboards
     (define-key map (kbd "C-c C-=") 'config-general-align-vars)
+    (define-key map (kbd "C-c C-f") 'find-file-at-point) ;; FIXME: change to [follow-link]
+    (define-key map (kbd "<C-return>")   'config-general-do-electric-return)
     (define-key map [remap delete-backward-char] 'backward-delete-char-untabify)
     map)
   "Keymap used in Config::General mode."
