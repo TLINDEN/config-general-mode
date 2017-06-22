@@ -21,16 +21,63 @@
 
 ;; Version: 0.01
 ;; Author: T.v.Dein <tlinden@cpan.org>
-;; Keywords: config
+;; Keywords: config file editing
 ;; URL: https://github.com/tlinden/config-general-mode
 ;; License: GNU General Public License >= 2
 
 ;;; Commentary:
 
-;;(add-hook 'cg-mode-hook 'electric-indent-mode)
+;;;; Introduction
 
-;;; Install:
-;;; Customize:
+;; [Config::General](http://search.cpan.org/dist/Config-General/) is a
+;; Perl   module  for   parsing  config   files  with   some  enhanced
+;; features. `config-general-mode' makes it easier to edit such config
+;; files with emacs.
+
+;; It is based on `conf-mode' with the following features:
+
+;; - good syntax highlighting for config files
+;; - completion support with `<tab>' (using `dabbrev')
+;; - imenu support for <blocks>
+;; - electric paring mode (for quotes, parens, etc) enabled
+;; - automatic indenting
+;; - jump to include file with `<ret>'
+
+;;;; Installation
+
+;; To use, save config-general-mode.el to a directory in your load-path.
+
+;; Add something like this to your config:
+
+;;     (require 'config-general-mode)
+;;     (add-to-list 'auto-mode-alist '("\\.conf$" . config-general-mode))
+
+;; or load it manually, when needed:
+
+;;     M-x config-general-mode
+    
+;; You can also enable it with  a buffer-local variable by adding this as
+;; the first line of a config file:
+
+;;     # -*-config-general-*-
+   
+;;;; Customize
+
+;; You can customize the mode with:
+
+;;      M-x customize-group RET config-general-mode RET
+
+;; You can also use hooks to config-general  mode as a way to modify or enhance
+;; its behavior.  The following hooks are available:
+
+;;     config-general-mode-hook
+    
+;; For example:
+
+;;     (add-hook 'config-general-mode-hook 'electric-indent-mode)
+
+
+
 
 ;;; Code:
 
