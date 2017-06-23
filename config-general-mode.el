@@ -241,6 +241,55 @@ indent it and move (point) there."
 (defun config-general--fl-end-eof (limit)
   (re-search-forward "^\\([A-Z0-9]+\\)\n" limit t))
 
+;; via: https://fuco1.github.io/2017-06-11-Font-locking-with-custom-matchers.html
+;; however, I removed the dash.el dependency
+(defun config-general-match-variables-in-quotes (limit)
+  "Match variables in double-quotes"
+  (with-syntax-table config-general-mode-syntax-table
+    (catch 'done
+      (while (re-search-forward
+              "\\(?:^\\|[^\\]\\)\\(\\$\\)\\({.+?}\\|[_[:alnum:]]+\\|[-!#$*0?@_]\\)"
+              limit t)
+        (let ((SS (nth 3 (syntax-ppss))))
+          (when SS
+            (when (= SS 34)
+              (throw 'done (point)))))))))
+
+
+(defun config-general-kill-line ()
+  "Behave as the normal `kill-line' unless current (and the following)
+line ends with a bare backslash, the line continuation marker,
+in which case all continuing lines will be killed. If (point) is
+on a block begin, then kill the whole block. Named blocks are not
+supported though."
+  (interactive)
+  (when kill-whole-line
+    (beginning-of-line))
+  (let ((savepos (point))
+        (end (save-excursion (end-of-line) (point)))
+        (onblock (save-excursion
+                   (backward-char 1) ;; required since re-search-forward ignores 1st char
+                   (re-search-forward "^\s*<\\([a-zA-Z0-9]+\\)>" (end-of-line) t)))
+        (block nil))
+    (if onblock
+        ;; we are on a block begin
+        (save-excursion
+          (setq block (match-string-no-properties 1))
+          (when (re-search-forward (format "^\s*</%s>" block) (end-of-line) t)
+            (setq end (point))))
+      ;; else
+      (save-excursion
+        (end-of-line)
+        (while (looking-back "\\\\")
+          ;; we are at a continuation
+          (forward-line 1)
+          (end-of-line)
+          (setq end (point)))))
+    ;; now, 'end is either the original end of line or somewhere below
+    (kill-region savepos end)))
+
+;;;; Init Functions
+
 (defun config-general--init-syntax ()
   ;; we need our own syntax table for mixed C++ and Shell comment support
   (set-syntax-table
@@ -255,20 +304,6 @@ indent it and move (point) there."
           (modify-syntax-entry ?< ".")
           (modify-syntax-entry ?> ".")
           st)))
-
-;; via: https://fuco1.github.io/2017-06-11-Font-locking-with-custom-matchers.html
-;; however, I removed the dash.el dependency
-(defun config-general-match-variables-in-quotes (limit)
-  "Match variables in double-quotes"
-  (with-syntax-table config-general-mode-syntax-table
-    (catch 'done
-      (while (re-search-forward
-              "\\(?:^\\|[^\\]\\)\\(\\$\\)\\({.+?}\\|[_[:alnum:]]+\\|[-!#$*0?@_]\\)"
-              limit t)
-        (let ((SS (nth 3 (syntax-ppss))))
-          (when SS
-            (when (= SS 34)
-              (throw 'done (point)))))))))
 
 (defun config-general--init-font-lock ()
     ;; better suited to configs
@@ -361,6 +396,7 @@ indent it and move (point) there."
     (define-key map (kbd "C-c C-t")              'config-general-toggle-flag)
     (define-key map (kbd "<C-return>")           'config-general-do-electric-return)
     (define-key map (kbd "<tab>")                'config-general-tab-or-complete)
+    (define-key map (kbd "C-k")                  'config-general-kill-line)
     (define-key map [remap delete-backward-char] 'backward-delete-char-untabify)
     map)
   "Keymap used in Config::General mode."
