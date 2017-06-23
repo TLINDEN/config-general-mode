@@ -48,7 +48,9 @@ true to  false). Use <kbd>C-c  C-=</kbd> on a region  to automatically
 align on the `=` character. Use <kbd>C-c C-/</kbd> to breakup a region
 with  long lines  into  shorter ones  using  backslash notation.   Use
 <kbd>C-return</kbd> to visit an included file  or (when not on a link)
-insert a new line below the current one, indent and move point there.
+insert a new line below the  current one, indent and move point there.
+Use <kbd>C-k</kbd>  to delete  lines, including continuation  lines or
+whole blocks.
 
 ### Customize
 
