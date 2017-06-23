@@ -181,7 +181,7 @@
 
 (defvar config-general-imenu-expression
   '(
-    ("Blocks"  "^ *<\\([a-zA-Z0-9]+.*\\)>" 1 ))
+    (nil  "^ *<\\([a-zA-Z0-9]+.*\\)>" 1 ))
   "Imenu generic expression for Config:General mode.  See `imenu-generic-expression'.")
 
 ;;;; Public Functions
@@ -243,7 +243,7 @@ indent it and move (point) there."
   (re-search-forward "^\\([A-Z0-9]+\\)\n" limit t))
 
 ;; via: https://fuco1.github.io/2017-06-11-Font-locking-with-custom-matchers.html
-;; however, I removed the dash.el dependency
+;; however, I removed the dash.el dependency and used a normal regexp
 (defun config-general-match-variables-in-quotes (limit)
   "Match variables in double-quotes"
   (with-syntax-table config-general-mode-syntax-table
@@ -302,6 +302,7 @@ supported though."
           (modify-syntax-entry ?\\ "\\" st)
           (modify-syntax-entry ?$ "'" st)
           (modify-syntax-entry ?\' "\"\"") ;; make ' electric too
+          (modify-syntax-entry ?\` "\"\"") ;; make ` electric too
           (modify-syntax-entry ?< ".")
           (modify-syntax-entry ?> ".")
           st)))
