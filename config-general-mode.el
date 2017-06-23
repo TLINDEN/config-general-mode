@@ -256,12 +256,31 @@ indent it and move (point) there."
           (modify-syntax-entry ?> ".")
           st)))
 
+;; via: https://fuco1.github.io/2017-06-11-Font-locking-with-custom-matchers.html
+;; however, I removed the dash.el dependency
+(defun config-general-match-variables-in-quotes (limit)
+  "Match variables in double-quotes"
+  (with-syntax-table config-general-mode-syntax-table
+    (catch 'done
+      (while (re-search-forward
+              "\\(?:^\\|[^\\]\\)\\(\\$\\)\\({.+?}\\|[_[:alnum:]]+\\|[-!#$*0?@_]\\)"
+              limit t)
+        (let ((SS (nth 3 (syntax-ppss))))
+          (when SS
+            (when (= SS 34)
+              (throw 'done (point)))))))))
+
 (defun config-general--init-font-lock ()
     ;; better suited to configs
   (setq config-general-font-lock-keywords
         '(
           ;; <>
           ("\\([<>|]+\\)" 1 'config-general-special-char-face)
+
+          ;; special handling of single or double quoted variables
+          (config-general-match-variables-in-quotes
+           (1 'default t)
+           (2 font-lock-variable-name-face t))
           
           ;; <<include ...>>
           ("^[ \t]*<<\\(include\\) [ \t]*\\(.+?\\)>>*"
@@ -310,6 +329,27 @@ indent it and move (point) there."
   ;; Inserting a brace or quote automatically inserts the matching pair
   (electric-pair-mode t))
 
+(defun config-general--init-vars ()
+  ;; prepare clean startup
+  (kill-all-local-variables)
+
+  ;; support for 'comment-region et al
+  (setq-local comment-start "# ")
+  (setq-local comment-end "")
+  
+  ;; we don't need a complicated indent strategy, relative is totally ok
+  (setq-local indent-line-function #'indent-relative)
+
+  ;; alert about trailing whitespaces, important for continuations
+  (setq-local show-trailing-whitespace t))
+
+(defun config-general--init-imenu ()
+  ;; imenu config
+  (make-local-variable 'imenu-generic-expression)
+  (setq imenu-generic-expression config-general-imenu-expression)
+  (setq imenu-case-fold-search nil)
+  (require 'imenu))
+
 ;;;###autoload
 (defvar config-general-mode-map
   (let ((map (make-sparse-keymap)))
@@ -331,20 +371,12 @@ indent it and move (point) there."
   "Config::General config file mode.
 \\{config-general-mode-map}"
 
-  ;; prepare clean startup
-  (kill-all-local-variables)
-
-  ;; support for 'comment-region et al
-  (setq-local comment-start "# ")
-  (setq-local comment-end "")
-
-  ;; we don't need a complicated indent strategy, relative is totally ok
-  (setq-local indent-line-function #'indent-relative)
-
   ;; initialize mode
+  (config-general--init-vars)
   (config-general--init-font-lock)
   (config-general--init-minors)
   (config-general--init-syntax)
+  (config-general--init-imenu)
   
   ;; load keymap
   (use-local-map config-general-mode-map)
@@ -357,12 +389,6 @@ indent it and move (point) there."
   (local-unset-key (kbd "C-c C-w"))
   (local-unset-key (kbd "C-c C-x"))
   (local-unset-key (kbd "C-c :"))
-
-  ;; imenu
-  (make-local-variable 'imenu-generic-expression)
-  (setq imenu-generic-expression config-general-imenu-expression)
-  (setq imenu-case-fold-search nil)
-  (require 'imenu)
 
   ;; make us known correctly
   (setq major-mode 'config-general-mode)
