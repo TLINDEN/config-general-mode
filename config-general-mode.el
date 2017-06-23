@@ -63,13 +63,14 @@
 
 ;;;; Usage
 
-;; Edit  your config  file as  usual.  Use `<tab>'  for completion  of
-;; values and variables.  Use `C-c C-t' to toggle flags  (like true to
+;; Edit  your config  file as  usual.  Use  `<tab>' for  completion of
+;; values and variables.  Use `C-c C-t'  to toggle flags (like true to
 ;; false). Use `C-c C-=' on a region to automatically align on the `=`
 ;; character. Use `C-c  C-/' to breakup a region with  long lines into
 ;; shorter ones  using backslash notation.  Use  `<C-return>' to visit
 ;; an included file  or (when not on  a link) insert a  new line below
-;; the current one, indent and move point there.
+;; the current one, indent and move point there. Use `<C-k>' to delete
+;; lines, including continuation lines or whole blocks.
 
 ;;;; Customize
 
