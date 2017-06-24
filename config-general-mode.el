@@ -207,7 +207,7 @@ with BEG and END based on the = character."
 indent it and move (point) there."
   (interactive)
   (if (eq config-general-electric-return t)
-      (if (eq (get-text-property (point)'face) 'config-general-file-face)
+      (if (eq (get-text-property (point) 'face) 'config-general-file-face)
           (find-file-at-point)
         (config-general-open-line-below))
     (newline)))
@@ -216,14 +216,20 @@ indent it and move (point) there."
   "Add a new line below, indent it and move (point) there."
   (interactive)
   (end-of-line)
-  (newline-and-indent))
+  (if (eq  (get-text-property (point) 'face) 'font-lock-comment-face)
+      (indent-new-comment-line)
+      (newline-and-indent)))
 
 (defun config-general-tab-or-complete ()
-  "Enter a <TAB> or do a dabbrev completion based on (point) position."
+  "Enter a <TAB>, goto current indentation or do a dabbrev
+completion based on (point) position."
   (interactive)
   (if (looking-back "[-%$_a-zA-Z0-9]")
-      (dabbrev-completion)
-    (indent-for-tab-command)))
+      (if (not (eq  (get-text-property (point) 'face) 'font-lock-comment-face))
+          (dabbrev-completion))
+    (if (eq (point) (line-end-position))
+        (indent-for-tab-command)
+      (back-to-indentation))))
 
 (defun config-general-toggle-flag ()
   "Toggle a value of the list `config-general-toggle-values'."
