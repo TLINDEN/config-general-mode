@@ -181,7 +181,8 @@
 
 (defvar config-general-imenu-expression
   '(
-    (nil  "^ *<\\([a-zA-Z0-9]+.*\\)>" 1 ))
+    (nil  "^ *<\\([a-zA-Z0-9]+.*\\)>" 1 )
+    )
   "Imenu generic expression for Config:General mode.  See `imenu-generic-expression'.")
 
 ;;;; Public Functions
@@ -256,27 +257,31 @@ indent it and move (point) there."
             (when (= SS 34)
               (throw 'done (point)))))))))
 
+(defun config-general-kill-line-or-block-or-continuation (&optional ARG)
+  "If the  current (and the  following) line[s] ends with  a bare
+backslash -  the line continuation  marker - the current  and all
+continuing lines will be killed.
 
-(defun config-general-kill-line ()
-  "Behave as the normal `kill-line' unless current (and the following)
-line ends with a bare backslash, the line continuation marker,
-in which case all continuing lines will be killed. If (point) is
-on a block begin, then kill the whole block. Named blocks are not
-supported though."
+If (point) is on a block  begin, then kill the whole block. Named
+blocks are not supported though.
+
+Otherwise the original `kill-line' will be called with ARG.
+
+The flag `kill-whole-line' will be followed."
   (interactive)
   (when kill-whole-line
     (beginning-of-line))
-  (let ((savepos (point))
-        (end (save-excursion (end-of-line) (point)))
-        (onblock (save-excursion
-                   (backward-char 1) ;; required since re-search-forward ignores 1st char
-                   (re-search-forward "^\s*<\\([a-zA-Z0-9]+\\)>" (end-of-line) t)))
-        (block nil))
+  (let* ((savepos (point))
+         (end (line-end-position))
+         (onblock (save-excursion
+                    (backward-char 1) ;; required since re-search-forward ignores 1st char
+                    (re-search-forward "^\s*<\\([a-zA-Z0-9]+\\)>" end t)))
+         (block nil))
     (if onblock
-        ;; we are on a block begin
+        ;; we are on a block begin, search a matching block end
         (save-excursion
           (setq block (match-string-no-properties 1))
-          (when (re-search-forward (format "^\s*</%s>" block) (end-of-line) t)
+          (when (re-search-forward (format "^\s*</%s>" block) nil t)
             (setq end (point))))
       ;; else
       (save-excursion
@@ -287,7 +292,14 @@ supported though."
           (end-of-line)
           (setq end (point)))))
     ;; now, 'end is either the original end of line or somewhere below
-    (kill-region savepos end)))
+    (if (= (count-lines savepos end) 1)
+        ;; we didn't leave current line, so just forward the call to the original
+        (kill-line ARG)
+      ;; else, more than 1 line, a block or continuation line, do it ourselfes
+      (when (> (point-max) end)
+        ;; goto next line to REALLY delete the line[s]
+        (setq end (+ end 1)))
+      (kill-region savepos end))))
 
 ;;;; Init Functions
 
@@ -398,7 +410,7 @@ supported though."
     (define-key map (kbd "C-c C-t")              'config-general-toggle-flag)
     (define-key map (kbd "<C-return>")           'config-general-do-electric-return)
     (define-key map (kbd "<tab>")                'config-general-tab-or-complete)
-    (define-key map (kbd "C-k")                  'config-general-kill-line)
+    (define-key map (kbd "C-k")                  'config-general-kill-line-or-block-or-continuation)
     (define-key map [remap delete-backward-char] 'backward-delete-char-untabify)
     map)
   "Keymap used in Config::General mode."
