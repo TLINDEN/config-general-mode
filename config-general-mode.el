@@ -70,7 +70,9 @@
 ;; shorter ones  using backslash notation.  Use  `<C-return>' to visit
 ;; an included file  or (when not on  a link) insert a  new line below
 ;; the current one, indent and move point there. Use `<C-k>' to delete
-;; lines, including continuation lines or whole blocks.
+;; lines, including continuation lines or  whole blocks. Use `C-c C-j'
+;; to  jump to  a block  definition (same  as using  `imenu' with  the
+;; mouse).
 
 ;;;; Customize
 
@@ -408,6 +410,7 @@ The flag `kill-whole-line' will be followed."
     (define-key map (kbd "C-c C-=")              'config-general-align-vars)
     (define-key map (kbd "C-c C-f")              'find-file-at-point) ;; FIXME: change to [follow-link]
     (define-key map (kbd "C-c C-t")              'config-general-toggle-flag)
+    (define-key map (kbd "C-c C-j")              'imenu) ;; aka jump
     (define-key map (kbd "<C-return>")           'config-general-do-electric-return)
     (define-key map (kbd "<tab>")                'config-general-tab-or-complete)
     (define-key map (kbd "C-k")                  'config-general-kill-line-or-block-or-continuation)
@@ -433,7 +436,6 @@ The flag `kill-whole-line' will be followed."
 
   ;; de-activate some (for C::G) senseless bindings
   (local-unset-key (kbd "C-c C-c"))
-  (local-unset-key (kbd "C-c C-j"))
   (local-unset-key (kbd "C-c C-p"))
   (local-unset-key (kbd "C-c C-u"))
   (local-unset-key (kbd "C-c C-w"))

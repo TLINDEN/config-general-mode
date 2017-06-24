@@ -50,7 +50,8 @@ with  long lines  into  shorter ones  using  backslash notation.   Use
 <kbd>C-return</kbd> to visit an included file  or (when not on a link)
 insert a new line below the  current one, indent and move point there.
 Use <kbd>C-k</kbd>  to delete  lines, including continuation  lines or
-whole blocks.
+whole blocks.   Use <kbd>C-c C-j</kbd>  to jump to a  block definition
+(same as using `imenu' with the mouse).
 
 ### Customize
 
