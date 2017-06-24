@@ -99,6 +99,7 @@
 (require 'sh-script)
 (require 'cc-mode)
 
+
 ;;;; Customizables
 
 ;; our group
@@ -375,12 +376,6 @@ The flag `kill-whole-line' will be followed."
                             (config-general--fl-end-eof . 'config-general-constant-face))))
 
 (defun config-general--init-minors ()
-  ;; enable simple outlining
-  (setq outline-heading-alist '(("##" . 1)
-                                ("###" . 2)
-                                ("####" . 3)
-                                ("#####" . 4)))
-  (outline-minor-mode t)
   ;; from shell-script-mode, turn << into here-doc
   (sh-electric-here-document-mode 1)
   ;; Inserting a brace or quote automatically inserts the matching pair
