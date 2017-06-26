@@ -227,7 +227,7 @@ completion based on (point) position."
   (interactive)
   (if (looking-back "[-%$_a-zA-Z0-9]")
       (if (not (eq  (get-text-property (point) 'face) 'font-lock-comment-face))
-          (dabbrev-completion))
+          (hippie-expand nil))
     (if (eq (point) (line-end-position))
         (indent-for-tab-command)
       (back-to-indentation))))
@@ -393,7 +393,16 @@ The flag `kill-whole-line' will be followed."
   (setq-local indent-line-function #'indent-relative)
 
   ;; alert about trailing whitespaces, important for continuations
-  (setq-local show-trailing-whitespace t))
+  (setq-local show-trailing-whitespace t)
+
+  ;; configure hippie-expand
+  (setq-local hippie-expand-only-buffers '(config-general-mode))
+  (setq-local hippie-expand-try-functions-list
+              '(try-expand-dabbrev
+                try-expand-dabbrev-all-buffers ; FIXME: uses all buffers, see bugreport to GNU.
+                try-complete-file-name-partially
+                try-complete-file-name))
+  )
 
 (defun config-general--init-imenu ()
   ;; imenu config
