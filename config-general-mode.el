@@ -283,7 +283,9 @@ The flag `kill-whole-line' will be followed."
   (let* ((savepos (point))
          (end (line-end-position))
          (onblock (save-excursion
-                    (backward-char 1) ;; required since re-search-forward ignores 1st char
+                    (when (not (bobp))
+                      ;; required since re-search-forward ignores 1st char
+                      (backward-char 1))
                     (re-search-forward "^\s*<\\([a-zA-Z0-9]+\\)>" end t)))
          (block nil))
     (if onblock
