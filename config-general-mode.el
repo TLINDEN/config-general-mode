@@ -98,7 +98,7 @@
 
 (require 'sh-script)
 (require 'cc-mode)
-
+(require 'hippie-exp)
 
 ;;;; Customizables
 
@@ -312,6 +312,69 @@ The flag `kill-whole-line' will be followed."
         (setq end (+ end 1)))
       (kill-region savepos end))))
 
+;; FIXME: Use this  patched version for older emacsen  and the default
+;; for version which contain the patch (if any, ever).
+;;
+;; The original  function try-expand-dabbrev-all-buffers  doesn't work
+;; correctly, it ignores a buffer-local configuration of the variables
+;; hippie-expand-only-buffers  and hippie-expand-ignore-buffers.  This
+;; is the patched version of the function.
+;;
+;; Bugreport: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=27501
+(defun config-general--try-expand-dabbrev-all-buffers (old)
+    "Try to expand word \"dynamically\", searching all other buffers.
+The argument OLD has to be nil the first call of this function, and t
+for subsequent calls (for further possible expansions of the same
+string).  It returns t if a new expansion is found, nil otherwise."
+  (let ((expansion ())
+        (buf (current-buffer))
+        (orig-case-fold-search case-fold-search)
+        (heib hippie-expand-ignore-buffers)
+        (heob hippie-expand-only-buffers)
+        )
+    (if (not old)
+        (progn
+          (he-init-string (he-dabbrev-beg) (point))
+          (setq he-search-bufs (buffer-list))
+          (setq he-searched-n-bufs 0)
+          (set-marker he-search-loc 1 (car he-search-bufs))))
+
+    (if (not (equal he-search-string ""))
+        (while (and he-search-bufs
+                    (not expansion)
+                    (or (not hippie-expand-max-buffers)
+                        (< he-searched-n-bufs hippie-expand-max-buffers)))
+          (set-buffer (car he-search-bufs))
+          (if (and (not (eq (current-buffer) buf))
+                   (if heob
+                       (he-buffer-member heob)
+                     (not (he-buffer-member heib))))
+              (save-excursion
+                (save-restriction
+                  (if hippie-expand-no-restriction
+                      (widen))
+                  (goto-char he-search-loc)
+                  (setq expansion
+                        (let ((case-fold-search orig-case-fold-search))
+                          (he-dabbrev-search he-search-string nil)))
+                  (set-marker he-search-loc (point))
+                  (if (not expansion)
+                      (progn
+                        (setq he-search-bufs (cdr he-search-bufs))
+                        (setq he-searched-n-bufs (1+ he-searched-n-bufs))
+                        (set-marker he-search-loc 1 (car he-search-bufs))))))
+            (setq he-search-bufs (cdr he-search-bufs))
+            (set-marker he-search-loc 1 (car he-search-bufs)))))
+
+    (set-buffer buf)
+    (if (not expansion)
+        (progn
+          (if old (he-reset-string))
+          ())
+      (progn
+        (he-substitute-string expansion t)
+        t))))
+
 ;;;; Init Functions
 
 (defun config-general--init-syntax ()
@@ -395,16 +458,19 @@ The flag `kill-whole-line' will be followed."
   (setq-local indent-line-function #'indent-relative)
 
   ;; alert about trailing whitespaces, important for continuations
-  (setq-local show-trailing-whitespace t)
+  (setq-local show-trailing-whitespace t))
 
-  ;; configure hippie-expand
+(defun config-general--init-hippie ()
+  "configure hippie-expand"
+  ;; use CG mode local only
   (setq-local hippie-expand-only-buffers '(config-general-mode))
+
+  ;; tries
   (setq-local hippie-expand-try-functions-list
               '(try-expand-dabbrev
-                try-expand-dabbrev-all-buffers ; FIXME: uses all buffers, see bugreport to GNU.
+                config-general--try-expand-dabbrev-all-buffers
                 try-complete-file-name-partially
-                try-complete-file-name))
-  )
+                try-complete-file-name)))
 
 (defun config-general--init-imenu ()
   ;; imenu config
@@ -497,6 +563,7 @@ For example:
 
   ;; initialize mode
   (config-general--init-vars)
+  (config-general--init-hippie)
   (config-general--init-font-lock)
   (config-general--init-minors)
   (config-general--init-syntax)
