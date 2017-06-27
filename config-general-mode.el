@@ -178,6 +178,11 @@
   "face for strings"
   :group 'config-general-faces)
 
+(defface config-general-value-face
+  '((t (:foreground "DarkSlateGrey")))
+  "face for variable values"
+  :group 'config-general-faces)
+
 
 ;;;; Global Vars
 (defconst config-general-mode-version "0.01" "Config::General mode version")
@@ -433,7 +438,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
           ;; variable definitions
           ;; FIXME: add support for -SplitPolicy and -SplitDelimiter and make
           ;; the = a customizable variable, if possible
-          ("^[ \t]*\\(.+?\\)[ \t]*="
+          ("^[ \t]*\\(.+?\\)[ \t]*=\\(.*\\)"
            (1 'config-general-variable-name-face))
           
           ;; interpolating variables
@@ -443,9 +448,15 @@ string).  It returns t if a new expansion is found, nil otherwise."
           ;; escape char
           ("\\(\\\\\\)" (1 'config-general-escape-char-face))
           ))
+
+  ;; activate
   (set (make-local-variable 'font-lock-defaults)
        '(config-general-font-lock-keywords nil nil nil nil))
-  (font-lock-mode 1))
+  (font-lock-mode 1)
+
+  ;; set default font for everything else, which can only be variable values
+  (setq buffer-face-mode-face 'config-general-value-face)
+  (buffer-face-mode))
 
 (defun config-general--init-minors ()
   ;; from shell-script-mode, turn << into here-doc
