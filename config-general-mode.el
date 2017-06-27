@@ -179,7 +179,7 @@
   :group 'config-general-faces)
 
 (defface config-general-value-face
-  '((t (:foreground "DarkSlateGrey")))
+  '((t (:inherit default)))
   "face for variable values"
   :group 'config-general-faces)
 
