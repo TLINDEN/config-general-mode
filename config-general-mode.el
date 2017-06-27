@@ -121,14 +121,10 @@
 
 (defcustom config-general-toggle-values
   '(("true"    . "false")
-    ("false"   . "true")
     ("on"      . "off")
-    ("off"     . "on")
     ("yes"     . "no")
-    ("no"      . "yes")
-    ("enable"  . "disable")
-    ("disable" . "enable"))
-  "Values which can be toggled, for simplicity's sake, add both values."
+    ("enable"  . "disable"))
+  "Values which can be toggled with <C-c C-t>. Only pairs are supported."
   :group 'config-general
   :type 'list)
 
@@ -244,18 +240,29 @@ completion based on (point) position."
       (back-to-indentation))))
 
 (defun config-general-toggle-flag ()
-  "Toggle a value of the list `config-general-toggle-values'."
+  "Toggle a value from the list `config-general-toggle-values' to its reverse.
+Case will be preserved, the toggle list can be modified on the fly."
   (interactive)
   (let* ((thing (downcase (thing-at-point 'word t)))
-         (flag (assoc thing config-general-toggle-values))
+         (flag (assoc thing (config-general--toggle-list)))
          (A (car (bounds-of-thing-at-point 'word)))
          (B (cdr (bounds-of-thing-at-point 'word))))
     (when (and thing flag)
-        (goto-char B)
-        (backward-kill-word 1)
-        (insert (cdr flag)))))
+      ;; idea from: https://emacs.stackexchange.com/questions/24601
+      ;; /replace-word-at-point-preserving-the-case-pattern/24617
+      (set-match-data (list A B))
+      (replace-match (cdr flag)))))
 
 ;;;; Internal Functions
+
+(defun config-general--toggle-list ()
+  "Add each entry of `config-general-toggle-values' in its reverse form
+and return a new list of both forms."
+  (let ((N config-general-toggle-values))
+    (dolist (E config-general-toggle-values)
+      (add-to-list 'N `(,(cdr E) . ,(car E)) t)
+      )
+    N))
 
 (defun config-general--fl-beg-eof (limit)
   (re-search-forward "<<\\([A-Z0-9]+\\)\n" limit t))
