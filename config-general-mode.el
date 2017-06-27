@@ -191,6 +191,7 @@
   "Keywords to highlight in CG mode.")
 
 (defvar config-general-mode-abbrev-table nil)
+(abbrev-table-put config-general-mode-abbrev-table :system t)
 
 (defvar config-general-imenu-expression
   '(
