@@ -173,6 +173,11 @@
   "face for escape chars"
   :group 'config-general-faces)
 
+(defface config-general-string-face
+  '((t (:inherit font-lock-string-face)))
+  "face for strings"
+  :group 'config-general-faces)
+
 
 ;;;; Global Vars
 (defconst config-general-mode-version "0.01" "Config::General mode version")
@@ -394,7 +399,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
           st)))
 
 (defun config-general--init-font-lock ()
-    ;; better suited to configs
+  ;; better suited to configs
   (setq config-general-font-lock-keywords
         '(
           ;; <>
@@ -404,7 +409,14 @@ string).  It returns t if a new expansion is found, nil otherwise."
           (config-general-match-variables-in-quotes
            (1 'default t)
            (2 font-lock-variable-name-face t))
-          
+
+          ;; EOF
+          ("\\(<<\\)\\([A-Z0-9]+\\)$"
+           (1 'config-general-escape-char-face)
+           (2 'config-general-constant-face))
+          ("^[ \t]*\\([A-Z0-9]+?\\)$"
+           (1 'config-general-constant-face))
+
           ;; <<include ...>>
           ("^[ \t]*<<\\(include\\) [ \t]*\\(.+?\\)>>*"
            (1 'config-general-constant-face)
@@ -430,15 +442,10 @@ string).  It returns t if a new expansion is found, nil otherwise."
 
           ;; escape char
           ("\\(\\\\\\)" (1 'config-general-escape-char-face))
-
           ))
-        
   (set (make-local-variable 'font-lock-defaults)
-       '(config-general-font-lock-keywords nil t nil nil))
-
-  (font-lock-add-keywords nil
-                          '((config-general--fl-beg-eof . 'config-general-constant-face)
-                            (config-general--fl-end-eof . 'config-general-constant-face))))
+       '(config-general-font-lock-keywords nil nil nil nil))
+  (font-lock-mode 1))
 
 (defun config-general--init-minors ()
   ;; from shell-script-mode, turn << into here-doc
