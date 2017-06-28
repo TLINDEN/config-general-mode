@@ -21,7 +21,7 @@
 
 ;; Version: 0.01
 ;; Author: T.v.Dein <tlinden@cpan.org>
-;; Keywords: config file editing
+;; Keywords: files
 ;; URL: https://github.com/tlinden/config-general-mode
 ;; License: GNU General Public License >= 2
 
@@ -481,22 +481,22 @@ string).  It returns t if a new expansion is found, nil otherwise."
   (kill-all-local-variables)
 
   ;; support for 'comment-region et al
-  (setq-local comment-start "# ")
-  (setq-local comment-end "")
+  (set (make-local-variable 'comment-start) "# ")
+  (set (make-local-variable 'comment-end) "")
   
   ;; we don't need a complicated indent strategy, relative is totally ok
-  (setq-local indent-line-function #'indent-relative)
+  (set (make-local-variable 'indent-line-function) #'indent-relative)
 
   ;; alert about trailing whitespaces, important for continuations
-  (setq-local show-trailing-whitespace t))
+  (set (make-local-variable 'show-trailing-whitespace) t))
 
 (defun config-general--init-hippie ()
   "Configure `hippie-expand'."
   ;; use CG mode local only
-  (setq-local hippie-expand-only-buffers '(config-general-mode))
+  (set (make-local-variable 'hippie-expand-only-buffers) '(config-general-mode))
 
   ;; tries
-  (setq-local hippie-expand-try-functions-list
+  (set (make-local-variable 'hippie-expand-try-functions-list)
               '(try-expand-dabbrev
                 config-general--try-expand-dabbrev-all-buffers
                 try-complete-file-name-partially
