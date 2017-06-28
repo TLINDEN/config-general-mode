@@ -31,8 +31,8 @@
 
 ;; [Config::General](http://search.cpan.org/dist/Config-General/) is a
 ;; Perl   module  for   parsing  config   files  with   some  enhanced
-;; features. `config-general-mode' makes it easier to edit such config
-;; files with emacs.
+;; features.  `config-general-mode' makes it easier to edit such config
+;; files with Emacs.
 
 ;; It is based on `conf-mode' with the following features:
 
@@ -66,11 +66,11 @@
 ;; Edit  your config  file as  usual.  Use  `<tab>' for  completion of
 ;; values and variables.  Use `C-c C-t'  to toggle flags (like true to
 ;; false). Use `C-c C-=' on a region to automatically align on the `=`
-;; character. Use `C-c  C-/' to breakup a region with  long lines into
+;; character.  Use `C-c  C-/' to breakup a region with  long lines into
 ;; shorter ones  using backslash notation.  Use  `<C-return>' to visit
 ;; an included file  or (when not on  a link) insert a  new line below
-;; the current one, indent and move point there. Use `<C-k>' to delete
-;; lines, including continuation lines or  whole blocks. Use `C-c C-j'
+;; the current one, indent and move point there.  Use `<C-k>' to delete
+;; lines, including continuation lines or  whole blocks.  Use `C-c C-j'
 ;; to  jump to  a block  definition (same  as using  `imenu' with  the
 ;; mouse).
 
@@ -181,7 +181,7 @@
 
 
 ;;;; Global Vars
-(defconst config-general-mode-version "0.01" "Config::General mode version")
+(defconst config-general-mode-version "0.01" "Config::General mode version.")
 
 (defvar config-general-font-lock-keywords nil
   "Keywords to highlight in CG mode.")
@@ -197,20 +197,18 @@
 
 ;;;; Public Functions
 
-(defun config-general-reload()
-  "Simple mode reloader"
-  (interactive)
-  (fundamental-mode)
-  (config-general-mode))
-
 (defun config-general-align-vars (beg end)
-  "Automatically align variable  assignments inside region marked
-with BEG and END based on the = character."
+  "Automatically align variable assignments.
+
+Align  inside region  marked  with BEG  and END  based  on the  =
+character."
   (interactive "r")
   (align-regexp beg end "\\(\\s-*\\)=" 1 1 nil))
 
 (defun config-general-do-electric-return ()
-  "If    (point)    is    on   an    include    filename,    call
+  "Electric return, follows file link or add newline below.
+
+If    (point)    is    on   an    include    filename,    call
 `find-file-at-point'  with it,  otherwise add  a new  line below,
 indent it and move (point) there."
   (interactive)
@@ -253,36 +251,6 @@ Case will be preserved, the toggle list can be modified on the fly."
       (set-match-data (list A B))
       (replace-match (cdr flag)))))
 
-;;;; Internal Functions
-
-(defun config-general--toggle-list ()
-  "Add each entry of `config-general-toggle-values' in its reverse form
-and return a new list of both forms."
-  (let ((N config-general-toggle-values))
-    (dolist (E config-general-toggle-values)
-      (add-to-list 'N `(,(cdr E) . ,(car E)) t)
-      )
-    N))
-
-(defun config-general--fl-beg-eof (limit)
-  (re-search-forward "<<\\([A-Z0-9]+\\)\n" limit t))
-
-(defun config-general--fl-end-eof (limit)
-  (re-search-forward "^\\([A-Z0-9]+\\)\n" limit t))
-
-;; via: https://fuco1.github.io/2017-06-11-Font-locking-with-custom-matchers.html
-;; however, I removed the dash.el dependency and used a normal regexp
-(defun config-general-match-variables-in-quotes (limit)
-  "Match variables in double-quotes"
-  (with-syntax-table config-general-mode-syntax-table
-    (catch 'done
-      (while (re-search-forward
-              "\\(?:^\\|[^\\]\\)\\(\\$\\)\\({.+?}\\|[_[:alnum:]]+\\|[-!#$*0?@_]\\)"
-              limit t)
-        (let ((SS (nth 3 (syntax-ppss))))
-          (when SS
-            (when (= SS 34)
-              (throw 'done (point)))))))))
 
 (defun config-general-kill-line-or-block-or-continuation (&optional ARG)
   "If the  current (and the  following) line[s] ends with  a bare
@@ -329,6 +297,40 @@ The flag `kill-whole-line' will be followed."
         ;; goto next line to REALLY delete the line[s]
         (setq end (+ end 1)))
       (kill-region savepos end))))
+
+;;;; Internal Functions
+
+(defun config-general--toggle-list ()
+  "Add each entry of `config-general-toggle-values' in its reverse form
+and return a new list of both forms."
+  (let ((N config-general-toggle-values))
+    (dolist (E config-general-toggle-values)
+      (add-to-list 'N `(,(cdr E) . ,(car E)) t)
+      )
+    N))
+
+(defun config-general--fl-beg-eof (limit)
+  "Search for beginning of here-doc."
+  (re-search-forward "<<\\([A-Z0-9]+\\)\n" limit t))
+
+(defun config-general--fl-end-eof (limit)
+  "Search for end of here-doc."
+  (re-search-forward "^\\([A-Z0-9]+\\)\n" limit t))
+
+;; via: https://fuco1.github.io/2017-06-11-Font-locking-with-custom-matchers.html
+;; however, I removed the dash.el dependency and used a normal regexp
+(defun config-general--match-variables-in-quotes (limit)
+  "Match variables in double-quotes.
+Argument LIMIT limits the search."
+  (with-syntax-table config-general-mode-syntax-table
+    (catch 'done
+      (while (re-search-forward
+              "\\(?:^\\|[^\\]\\)\\(\\$\\)\\({.+?}\\|[_[:alnum:]]+\\|[-!#$*0?@_]\\)"
+              limit t)
+        (let ((SS (nth 3 (syntax-ppss))))
+          (when SS
+            (when (= SS 34)
+              (throw 'done (point)))))))))
 
 ;; FIXME: Use this  patched version for older emacsen  and the default
 ;; for version which contain the patch (if any, ever).
@@ -396,7 +398,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
 ;;;; Init Functions
 
 (defun config-general--init-syntax ()
-  ;; we need our own syntax table for mixed C++ and Shell comment support
+  "We need our own syntax table for mixed C++ and Shell comment support."
   (set-syntax-table
         (let ((st (make-syntax-table)))
           (modify-syntax-entry ?\/ ". 14n" st)
@@ -412,14 +414,14 @@ string).  It returns t if a new expansion is found, nil otherwise."
           st)))
 
 (defun config-general--init-font-lock ()
-  ;; better suited to configs
+  "Initialize font locking."
   (setq config-general-font-lock-keywords
         '(
           ;; <>
           ("\\([<>|]+\\)" 1 'config-general-special-char-face)
 
           ;; special handling of single or double quoted variables
-          (config-general-match-variables-in-quotes
+          (config-general--match-variables-in-quotes
            (1 'default t)
            (2 font-lock-variable-name-face t))
 
@@ -467,12 +469,14 @@ string).  It returns t if a new expansion is found, nil otherwise."
   (buffer-face-mode))
 
 (defun config-general--init-minors ()
+  "Enable and configure usefull minor modes."
   ;; from shell-script-mode, turn << into here-doc
   (sh-electric-here-document-mode 1)
   ;; Inserting a brace or quote automatically inserts the matching pair
   (electric-pair-mode t))
 
 (defun config-general--init-vars ()
+  "Initialize major mode configuration."
   ;; prepare clean startup
   (kill-all-local-variables)
 
@@ -487,7 +491,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
   (setq-local show-trailing-whitespace t))
 
 (defun config-general--init-hippie ()
-  "configure hippie-expand"
+  "Configure `hippie-expand'."
   ;; use CG mode local only
   (setq-local hippie-expand-only-buffers '(config-general-mode))
 
@@ -499,7 +503,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
                 try-complete-file-name)))
 
 (defun config-general--init-imenu ()
-  ;; imenu config
+  "Configure `imenu'."
   (make-local-variable 'imenu-generic-expression)
   (setq imenu-generic-expression config-general-imenu-expression)
   (setq imenu-case-fold-search nil)
@@ -508,7 +512,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
 ;;;###autoload
 (defvar config-general-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-7")              'sh-backslash-region) ;; for latin keyboards 
+    (define-key map (kbd "C-c C-7")              'sh-backslash-region) ;; for latin keyboards
     (define-key map (kbd "C-c C-/")              'sh-backslash-region)
     (define-key map (kbd "C-c C-0")              'config-general-align-vars) ;; for latin keyboards
     (define-key map (kbd "C-c C-=")              'config-general-align-vars)
