@@ -55,7 +55,7 @@
 ;; or load it manually, when needed:
 
 ;;     M-x config-general-mode
-    
+
 ;; You can also enable it with  a buffer-local variable by adding this as
 ;; the first line of a config file:
 
@@ -84,7 +84,7 @@
 ;; its behavior.  The following hooks are available:
 
 ;;     config-general-mode-hook
-    
+
 ;; For example:
 
 ;;     (add-hook 'config-general-mode-hook 'electric-indent-mode)
@@ -441,7 +441,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
           ("^[ \t]*\\(include\\) [ \t]*\\(.*\\)"
            (1 'config-general-constant-face)
            (2 'config-general-file-face))
-          
+
           ;; <block ..>
           ("^\s*</*\\(.+\\)>" 1 'config-general-blockname-face)
 
@@ -450,7 +450,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
           ;; the = a customizable variable, if possible
           ("^[ \t]*\\(.+?\\)[ \t]*=\\(.*\\)"
            (1 'config-general-variable-name-face))
-          
+
           ;; interpolating variables
           ("\\$\\({#?\\)?\\([[:alpha:]_][[:alnum:]_]*\\|[-#?@!]\\)"
            (2 'config-general-interpolating-variable-face))
@@ -483,7 +483,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
   ;; support for 'comment-region et al
   (set (make-local-variable 'comment-start) "# ")
   (set (make-local-variable 'comment-end) "")
-  
+
   ;; we don't need a complicated indent strategy, relative is totally ok
   (set (make-local-variable 'indent-line-function) #'indent-relative)
 
@@ -555,7 +555,7 @@ Add something like this to your config:
 or load it manually, when needed:
 
     M-x config-general-mode
-   
+
 You can  also enable  it with a  buffer-local variable  by adding
 this as the first line of a config file:
 
@@ -584,7 +584,7 @@ You can also use hooks to  config-general mode as a way to modify
 or enhance its behavior.  The following hooks are available:
 
     config-general-mode-hook
-   
+
 For example:
 
     (add-hook 'config-general-mode-hook 'electric-indent-mode)
@@ -598,7 +598,7 @@ For example:
   (config-general--init-minors)
   (config-general--init-syntax)
   (config-general--init-imenu)
-  
+
   ;; load keymap
   (use-local-map config-general-mode-map)
 
