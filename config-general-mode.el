@@ -226,16 +226,28 @@ indent it and move (point) there."
       (indent-new-comment-line)
       (newline-and-indent)))
 
-(defun config-general-tab-or-complete ()
-  "Enter a <TAB>, goto current indentation or do a dabbrev
-completion based on (point) position."
+(defun config-general-completion-at-point ()
+  "Complete word at point using hippie-expand, if not on a comment."
   (interactive)
-  (if (looking-back "[-%$_a-zA-Z0-9]")
-      (if (not (eq  (get-text-property (point) 'face) 'font-lock-comment-face))
-          (hippie-expand nil))
-    (if (eq (point) (line-end-position))
+  (when (looking-back "[-%$_a-zA-Z0-9]")
+    (unless (eq (get-text-property (point) 'face) 'font-lock-comment-face)
+      (hippie-expand nil))))
+
+(defun config-general-do-electric-tab ()
+  "Enter a <TAB> or goto current indentation."
+  (interactive)
+  (if (eq (point) (line-end-position))
         (indent-for-tab-command)
-      (back-to-indentation))))
+      (back-to-indentation)))
+
+(defun config-general-tab-or-expand ()
+  "Do electric TAB or completion depending where point is.
+
+This is just a convenience function, which can be mapped
+to `tab' by the user. .Not in use by default."
+  (interactive)
+  (unless (config-general-completion-at-point)
+    (config-general-do-electric-tab)))
 
 (defun config-general-toggle-flag ()
   "Toggle a value from the list `config-general-toggle-values' to its reverse.
@@ -250,7 +262,6 @@ Case will be preserved, the toggle list can be modified on the fly."
       ;; /replace-word-at-point-preserving-the-case-pattern/24617
       (set-match-data (list A B))
       (replace-match (cdr flag)))))
-
 
 (defun config-general-kill-line-or-block-or-continuation (&optional ARG)
   "If the  current (and the  following) line[s] ends with  a bare
@@ -495,12 +506,20 @@ string).  It returns t if a new expansion is found, nil otherwise."
   ;; use CG mode local only
   (set (make-local-variable 'hippie-expand-only-buffers) '(config-general-mode))
 
-  ;; tries
-  (set (make-local-variable 'hippie-expand-try-functions-list)
-              '(try-expand-dabbrev
-                config-general--try-expand-dabbrev-all-buffers
-                try-complete-file-name-partially
-                try-complete-file-name)))
+  ;; configure order of expansion functions
+  (if (version< emacs-version "25.1")
+      (set (make-local-variable 'hippie-expand-try-functions-list)
+           '(try-expand-dabbrev ;; use patched version
+             config-general--try-expand-dabbrev-all-buffers
+             try-complete-file-name-partially
+             try-complete-file-name))
+    (set (make-local-variable 'hippie-expand-try-functions-list)
+         '(try-expand-dabbrev
+           try-expand-dabbrev-all-buffers
+           try-complete-file-name-partially
+           try-complete-file-name)))
+  ;; enable
+  (add-hook 'completion-at-point-functions 'config-general-completion-at-point))
 
 (defun config-general--init-imenu ()
   "Configure `imenu'."
@@ -520,7 +539,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
     (define-key map (kbd "C-c C-t")              'config-general-toggle-flag)
     (define-key map (kbd "C-c C-j")              'imenu) ;; aka jump
     (define-key map (kbd "<C-return>")           'config-general-do-electric-return)
-    (define-key map (kbd "<tab>")                'config-general-tab-or-complete)
+    (define-key map (kbd "<tab>")                'config-general-do-electric-tab)
     (define-key map (kbd "C-k")                  'config-general-kill-line-or-block-or-continuation)
     (define-key map [remap delete-backward-char] 'backward-delete-char-untabify)
     map)
@@ -599,24 +618,10 @@ For example:
   (config-general--init-syntax)
   (config-general--init-imenu)
 
-  ;; load keymap
-  (use-local-map config-general-mode-map)
-
-  ;; de-activate some (for C::G) senseless bindings
-  (local-unset-key (kbd "C-c C-c"))
-  (local-unset-key (kbd "C-c C-p"))
-  (local-unset-key (kbd "C-c C-u"))
-  (local-unset-key (kbd "C-c C-w"))
-  (local-unset-key (kbd "C-c C-x"))
-  (local-unset-key (kbd "C-c :"))
-
   ;; make us known correctly
+  ;; FIXME: doesn't work when removed
   (setq major-mode 'config-general-mode)
-  (setq mode-name "C::G")
-
-  ;; eval hooks, if any
-  (run-mode-hooks 'config-general-mode-hooks))
-
+  (setq mode-name "C::G"))
 
 
 ;; done
