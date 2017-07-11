@@ -1,3 +1,4 @@
+
 ;;; config-general-mode.el --- Config::General config file mode
 
 ;; Copyright (C) 2016-2017, T.v.Dein <tlinden@cpan.org>
@@ -93,7 +94,6 @@
 
 
 ;;; Code:
-
 ;;;; Dependencies
 
 (require 'sh-script)
@@ -621,7 +621,8 @@ For example:
   ;; make us known correctly
   ;; FIXME: doesn't work when removed
   (setq major-mode 'config-general-mode)
-  (setq mode-name "C::G"))
+  (setq mode-name "C::G")
+  (use-local-map config-general-mode-map))
 
 
 ;; done
