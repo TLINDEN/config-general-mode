@@ -1,4 +1,3 @@
-
 ;;; config-general-mode.el --- Config::General config file mode
 
 ;; Copyright (C) 2016-2017, T.v.Dein <tlinden@cpan.org>
@@ -124,13 +123,13 @@
     ("on"      . "off")
     ("yes"     . "no")
     ("enable"  . "disable"))
-  "Values which can be toggled with <C-c C-t>. Only pairs are supported."
+  "Values which can be toggled with \\[config-general-toggle-flag].  Only pairs are supported."
   :group 'config-general
   :type 'list)
 
 ;; faces
 (defface config-general-file-face
-   '((t (:inherit link)))
+  '((t (:inherit link)))
   "face for include files"
   :group 'config-general-faces)
 
@@ -208,9 +207,9 @@ character."
 (defun config-general-do-electric-return ()
   "Electric return, follows file link or add newline below.
 
-If    (point)    is    on   an    include    filename,    call
-`find-file-at-point'  with it,  otherwise add  a new  line below,
-indent it and move (point) there."
+If (point) is on an include filename, call `find-file-at-point'
+with it, otherwise add a new line below, indent it and
+move (point) there."
   (interactive)
   (if (eq config-general-electric-return t)
       (if (eq (get-text-property (point) 'face) 'config-general-file-face)
@@ -264,11 +263,11 @@ Case will be preserved, the toggle list can be modified on the fly."
       (replace-match (cdr flag)))))
 
 (defun config-general-kill-line-or-block-or-continuation (&optional ARG)
-  "If the  current (and the  following) line[s] ends with  a bare
-backslash -  the line continuation  marker - the current  and all
+  "If the current (and the following) line[s] ends with a bare
+backslash - the line continuation marker - the current and all
 continuing lines will be killed.
 
-If (point) is on a block  begin, then kill the whole block. Named
+If (point) is on a block begin, then kill the whole block. Named
 blocks are not supported though.
 
 Otherwise the original `kill-line' will be called with ARG.
@@ -550,8 +549,8 @@ string).  It returns t if a new expansion is found, nil otherwise."
 (define-derived-mode config-general-mode conf-mode "config-general"
   "Config::General config file mode.
 
-Config::General is  a Perl module  for parsing config  files with
-some enhanced features. `config-general-mode'  makes it easier to
+Config::General is a Perl module for parsing config files with
+some enhanced features. `config-general-mode' makes it easier to
 edit such config files with emacs.
 
 It is based on `conf-mode' with the following features:
@@ -563,50 +562,21 @@ It is based on `conf-mode' with the following features:
 - automatic indenting
 - jump to include file with `<ret>'
 
-To  use,  save  config-general-mode.el  to a  directory  in  your
-load-path.
-
-Add something like this to your config:
-
-    (require 'config-general-mode)
-    (add-to-list 'auto-mode-alist '(\"\\.conf$\" . config-general-mode))
-
-or load it manually, when needed:
-
-    M-x config-general-mode
-
-You can  also enable  it with a  buffer-local variable  by adding
-this as the first line of a config file:
-
-    # -*-config-general-*-
-
 Usage
 
-Edit your  config file as  usual.  Use `<tab>' for  completion of
-values and variables.   Use `C-c C-t' to toggle  flags (like true
-to false).  Use `C-c C-=' on  a region to automatically  align on
-the `=`  character. Use `C-c C-/'  to breakup a region  with long
-lines   into  shorter   ones  using   backslash  notation.    Use
-`<C-return>' to  visit an included file  or (when not on  a link)
-insert a  new line below the  current one, indent and  move point
-there. Use `<C-k>' to  delete lines, including continuation lines
-or   whole  blocks.   Use  `C-c   C-j'   to  jump   to  a   block
-definition (same as using `imenu' with the mouse).
-
-Customize
-
-You can customize the mode with:
-
-     M-x customize-group RET config-general-mode RET
-
-You can also use hooks to  config-general mode as a way to modify
-or enhance its behavior.  The following hooks are available:
-
-    config-general-mode-hook
-
-For example:
-
-    (add-hook 'config-general-mode-hook 'electric-indent-mode)
+Edit your config file as usual.  Use `<tab>' for completion of
+values and variables.  Use \\[config-general-toggle-flag] to
+toggle flags (like true to false).  Use
+\\[config-general-align-vars] on a region to automatically align
+on the `=` character. Use \\[sh-backslash-region] to break up a
+region with long lines into shorter ones using backslash
+notation.  Use \\[config-general-do-electric-return] to visit an
+included file or (when not on a link) insert a new line below the
+current one, indent and move point there. Use
+\\[config-general-kill-line-or-block-or-continuation] to delete
+lines, including continuation lines or whole blocks.  Use
+\\[imenu] to jump to a block definition (same as using `imenu'
+with the mouse).
 
 \\{config-general-mode-map}"
 
