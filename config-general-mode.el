@@ -37,9 +37,7 @@
 ;; It is based on `conf-mode' with the following features:
 ;;
 ;; - good syntax highlighting for config files
-;; - completion support with `TAB' (using `dabbrev')
 ;; - imenu support for <blocks>
-;; - electric paring mode (for quotes, parens, etc) enabled
 ;; - automatic indenting
 ;; - jump to include file with `C-return'
 
@@ -95,9 +93,7 @@
 ;;; Code:
 ;;;; Dependencies
 
-(require 'sh-script)
-(require 'cc-mode)
-(require 'hippie-exp)
+(require 'conf-mode)
 
 ;;;; Customizables
 
@@ -173,11 +169,6 @@
   "face for strings"
   :group 'config-general-faces)
 
-(defface config-general-value-face
-  '((t (:inherit default)))
-  "face for variable values"
-  :group 'config-general-faces)
-
 
 ;;;; Global Vars
 (defconst config-general-mode-version "0.01" "Config::General mode version.")
@@ -221,32 +212,10 @@ move (point) there."
   "Add a new line below, indent it and move (point) there."
   (interactive)
   (end-of-line)
-  (if (eq  (get-text-property (point) 'face) 'font-lock-comment-face)
+  (if (elt (syntax-ppss) 4)
       (indent-new-comment-line)
-      (newline-and-indent)))
+    (newline-and-indent)))
 
-(defun config-general-completion-at-point ()
-  "Complete word at point using hippie-expand, if not on a comment."
-  (interactive)
-  (when (looking-back "[-%$_a-zA-Z0-9]")
-    (unless (eq (get-text-property (point) 'face) 'font-lock-comment-face)
-      (hippie-expand nil))))
-
-(defun config-general-do-electric-tab ()
-  "Enter a <TAB> or goto current indentation."
-  (interactive)
-  (if (eq (point) (line-end-position))
-        (indent-for-tab-command)
-      (back-to-indentation)))
-
-(defun config-general-tab-or-expand ()
-  "Do electric TAB or completion depending where point is.
-
-This is just a convenience function, which can be mapped
-to `tab' by the user. .Not in use by default."
-  (interactive)
-  (unless (config-general-completion-at-point)
-    (config-general-do-electric-tab)))
 
 (defun config-general-toggle-flag ()
   "Toggle a value from the list `config-general-toggle-values' to its reverse.
@@ -342,190 +311,68 @@ Argument LIMIT limits the search."
             (when (= SS 34)
               (throw 'done (point)))))))))
 
-;; FIXME: Use this  patched version for older emacsen  and the default
-;; for version which contain the patch (if any, ever).
-;;
-;; The original  function try-expand-dabbrev-all-buffers  doesn't work
-;; correctly, it ignores a buffer-local configuration of the variables
-;; hippie-expand-only-buffers  and hippie-expand-ignore-buffers.  This
-;; is the patched version of the function.
-;;
-;; Bugreport: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=27501
-(defun config-general--try-expand-dabbrev-all-buffers (old)
-    "Try to expand word \"dynamically\", searching all other buffers.
-The argument OLD has to be nil the first call of this function, and t
-for subsequent calls (for further possible expansions of the same
-string).  It returns t if a new expansion is found, nil otherwise."
-  (let ((expansion ())
-        (buf (current-buffer))
-        (orig-case-fold-search case-fold-search)
-        (heib hippie-expand-ignore-buffers)
-        (heob hippie-expand-only-buffers)
-        )
-    (if (not old)
-        (progn
-          (he-init-string (he-dabbrev-beg) (point))
-          (setq he-search-bufs (buffer-list))
-          (setq he-searched-n-bufs 0)
-          (set-marker he-search-loc 1 (car he-search-bufs))))
-
-    (if (not (equal he-search-string ""))
-        (while (and he-search-bufs
-                    (not expansion)
-                    (or (not hippie-expand-max-buffers)
-                        (< he-searched-n-bufs hippie-expand-max-buffers)))
-          (set-buffer (car he-search-bufs))
-          (if (and (not (eq (current-buffer) buf))
-                   (if heob
-                       (he-buffer-member heob)
-                     (not (he-buffer-member heib))))
-              (save-excursion
-                (save-restriction
-                  (if hippie-expand-no-restriction
-                      (widen))
-                  (goto-char he-search-loc)
-                  (setq expansion
-                        (let ((case-fold-search orig-case-fold-search))
-                          (he-dabbrev-search he-search-string nil)))
-                  (set-marker he-search-loc (point))
-                  (if (not expansion)
-                      (progn
-                        (setq he-search-bufs (cdr he-search-bufs))
-                        (setq he-searched-n-bufs (1+ he-searched-n-bufs))
-                        (set-marker he-search-loc 1 (car he-search-bufs))))))
-            (setq he-search-bufs (cdr he-search-bufs))
-            (set-marker he-search-loc 1 (car he-search-bufs)))))
-
-    (set-buffer buf)
-    (if (not expansion)
-        (progn
-          (if old (he-reset-string))
-          ())
-      (progn
-        (he-substitute-string expansion t)
-        t))))
 
 ;;;; Init Functions
 
-(defun config-general--init-syntax ()
-  "We need our own syntax table for mixed C++ and Shell comment support."
-  (set-syntax-table
-        (let ((st (make-syntax-table)))
-          (modify-syntax-entry ?\/ ". 14n" st)
-          (modify-syntax-entry ?\* ". 23n" st)
-          (modify-syntax-entry ?# "<" st)
-          (modify-syntax-entry ?\n ">" st)
-          (modify-syntax-entry ?\\ "\\" st)
-          (modify-syntax-entry ?$ "'" st)
-          (modify-syntax-entry ?\' "\"\"") ;; make ' electric too
-          (modify-syntax-entry ?\` "\"\"") ;; make ` electric too
-          (modify-syntax-entry ?< ".")
-          (modify-syntax-entry ?> ".")
-          st)))
+(defvar config-general-mode-syntax-table
+  (let ((st (make-syntax-table)))
+    (modify-syntax-entry ?\/ ". 14n" st)
+    (modify-syntax-entry ?\* ". 23n" st)
+    (modify-syntax-entry ?# "<" st)
+    (modify-syntax-entry ?\n ">" st)
+    (modify-syntax-entry ?\\ "\\" st)
+    (modify-syntax-entry ?$ "'" st)
+    (modify-syntax-entry ?\' "\"\"" st) ;; make ' electric too
+    (modify-syntax-entry ?\` "\"\"" st) ;; make ` electric too
+    (modify-syntax-entry ?< "." st)
+    (modify-syntax-entry ?> "." st)
+    st)
+  "Syntax table for `config-general-mode'.")
 
-(defun config-general--init-font-lock ()
-  "Initialize font locking."
-  (setq config-general-font-lock-keywords
-        '(
-          ;; <>
-          ("\\([<>|]+\\)" 1 'config-general-special-char-face)
+(setq config-general-font-lock-keywords
+      '(
+        ;; <>
+        ("\\([<>|]+\\)" 1 'config-general-special-char-face)
 
-          ;; special handling of single or double quoted variables
-          (config-general--match-variables-in-quotes
-           (1 'default t)
-           (2 font-lock-variable-name-face t))
+        ;; special handling of single or double quoted variables
+        (config-general--match-variables-in-quotes
+         (1 'default t)
+         (2 font-lock-variable-name-face t))
 
-          ;; EOF
-          ("\\(<<\\)\\([A-Z0-9]+\\)$"
-           (1 'config-general-escape-char-face)
-           (2 'config-general-constant-face))
-          ("^[ \t]*\\([A-Z0-9]+?\\)$"
-           (1 'config-general-constant-face))
+        ;; EOF
+        ("\\(<<\\)\\([A-Z0-9]+\\)$"
+         (1 'config-general-escape-char-face)
+         (2 'config-general-constant-face))
+        ("^[ \t]*\\([A-Z0-9]+?\\)$"
+         (1 'config-general-constant-face))
 
-          ;; <<include ...>>
-          ("^[ \t]*<<\\(include\\) [ \t]*\\(.+?\\)>>*"
-           (1 'config-general-constant-face)
-           (2 'config-general-file-face)) ;; FIXME: turn into real link property!
+        ;; <<include ...>>
+        ("^[ \t]*<<\\(include\\) [ \t]*\\(.+?\\)>>*"
+         (1 'config-general-constant-face)
+         (2 'config-general-file-face)) ;; FIXME: turn into real link property!
 
-          ;; include ...
-          ("^[ \t]*\\(include\\) [ \t]*\\(.*\\)"
-           (1 'config-general-constant-face)
-           (2 'config-general-file-face))
+        ;; include ...
+        ("^[ \t]*\\(include\\) [ \t]*\\(.*\\)"
+         (1 'config-general-constant-face)
+         (2 'config-general-file-face))
 
-          ;; <block ..>
-          ("^\s*</*\\(.+\\)>" 1 'config-general-blockname-face)
+        ;; <block ..>
+        ("^\s*</*\\(.+\\)>" 1 'config-general-blockname-face)
 
-          ;; variable definitions
-          ;; FIXME: add support for -SplitPolicy and -SplitDelimiter and make
-          ;; the = a customizable variable, if possible
-          ("^[ \t]*\\(.+?\\)[ \t]*=\\(.*\\)"
-           (1 'config-general-variable-name-face))
+        ;; variable definitions
+        ;; FIXME: add support for -SplitPolicy and -SplitDelimiter and make
+        ;; the = a customizable variable, if possible
+        ("^[ \t]*\\(.+?\\)[ \t]*=\\(.*\\)"
+         (1 'config-general-variable-name-face))
 
-          ;; interpolating variables
-          ("\\$\\({#?\\)?\\([[:alpha:]_][[:alnum:]_]*\\|[-#?@!]\\)"
-           (2 'config-general-interpolating-variable-face))
+        ;; interpolating variables
+        ("\\$\\({#?\\)?\\([[:alpha:]_][[:alnum:]_]*\\|[-#?@!]\\)"
+         (2 'config-general-interpolating-variable-face))
 
-          ;; escape char
-          ("\\(\\\\\\)" (1 'config-general-escape-char-face))
-          ))
+        ;; escape char
+        ("\\(\\\\\\)" (1 'config-general-escape-char-face))
+        ))
 
-  ;; activate
-  (set (make-local-variable 'font-lock-defaults)
-       '(config-general-font-lock-keywords nil nil nil nil))
-  (font-lock-mode 1)
-
-  ;; set default font for everything else, which can only be variable values
-  (setq buffer-face-mode-face 'config-general-value-face)
-  (buffer-face-mode))
-
-(defun config-general--init-minors ()
-  "Enable and configure usefull minor modes."
-  ;; from shell-script-mode, turn << into here-doc
-  (sh-electric-here-document-mode 1)
-  ;; Inserting a brace or quote automatically inserts the matching pair
-  (electric-pair-mode t))
-
-(defun config-general--init-vars ()
-  "Initialize major mode configuration."
-  ;; prepare clean startup
-  (kill-all-local-variables)
-
-  ;; support for 'comment-region et al
-  (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'comment-end) "")
-
-  ;; we don't need a complicated indent strategy, relative is totally ok
-  (set (make-local-variable 'indent-line-function) #'indent-relative)
-
-  ;; alert about trailing whitespaces, important for continuations
-  (set (make-local-variable 'show-trailing-whitespace) t))
-
-(defun config-general--init-hippie ()
-  "Configure `hippie-expand'."
-  ;; use CG mode local only
-  (set (make-local-variable 'hippie-expand-only-buffers) '(config-general-mode))
-
-  ;; configure order of expansion functions
-  (if (version< emacs-version "25.1")
-      (set (make-local-variable 'hippie-expand-try-functions-list)
-           '(try-expand-dabbrev ;; use patched version
-             config-general--try-expand-dabbrev-all-buffers
-             try-complete-file-name-partially
-             try-complete-file-name))
-    (set (make-local-variable 'hippie-expand-try-functions-list)
-         '(try-expand-dabbrev
-           try-expand-dabbrev-all-buffers
-           try-complete-file-name-partially
-           try-complete-file-name)))
-  ;; enable
-  (add-hook 'completion-at-point-functions 'config-general-completion-at-point))
-
-(defun config-general--init-imenu ()
-  "Configure `imenu'."
-  (make-local-variable 'imenu-generic-expression)
-  (setq imenu-generic-expression config-general-imenu-expression)
-  (setq imenu-case-fold-search nil)
-  (require 'imenu))
 
 ;;;###autoload
 (defvar config-general-mode-map
@@ -538,7 +385,6 @@ string).  It returns t if a new expansion is found, nil otherwise."
     (define-key map (kbd "C-c C-t")              'config-general-toggle-flag)
     (define-key map (kbd "C-c C-j")              'imenu) ;; aka jump
     (define-key map (kbd "<C-return>")           'config-general-do-electric-return)
-    (define-key map (kbd "<tab>")                'config-general-do-electric-tab)
     (define-key map (kbd "C-k")                  'config-general-kill-line-or-block-or-continuation)
     (define-key map [remap delete-backward-char] 'backward-delete-char-untabify)
     map)
@@ -546,7 +392,7 @@ string).  It returns t if a new expansion is found, nil otherwise."
   )
 
 ;;;###autoload
-(define-derived-mode config-general-mode conf-mode "config-general"
+(define-derived-mode config-general-mode conf-mode "Conf[General]"
   "Config::General config file mode.
 
 Config::General is a Perl module for parsing config files with
@@ -581,19 +427,16 @@ with the mouse).
 \\{config-general-mode-map}"
 
   ;; initialize mode
-  (config-general--init-vars)
-  (config-general--init-hippie)
-  (config-general--init-font-lock)
-  (config-general--init-minors)
-  (config-general--init-syntax)
-  (config-general--init-imenu)
+  (conf-mode-initialize "#" 'config-general-font-lock-keywords)
 
-  ;; make us known correctly
-  ;; FIXME: doesn't work when removed
-  (setq major-mode 'config-general-mode)
-  (setq mode-name "C::G")
-  (use-local-map config-general-mode-map))
+  ;; we don't need a complicated indent strategy, relative is totally ok
+  (set (make-local-variable 'indent-line-function) #'indent-relative)
 
+  ;; alert about trailing whitespaces, important for continuations
+  (setq show-trailing-whitespace t)
+
+  (setq imenu-generic-expression config-general-imenu-expression)
+  (setq imenu-case-fold-search nil))
 
 ;; done
 (provide 'config-general-mode)
