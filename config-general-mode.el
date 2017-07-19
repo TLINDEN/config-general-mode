@@ -19,7 +19,7 @@
 ;; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
 ;; USA
 
-;; Version: 0.01
+;; Version: 0.02
 ;; Author: T.v.Dein <tlinden@cpan.org>
 ;; Keywords: files
 ;; URL: https://github.com/tlinden/config-general-mode
@@ -243,8 +243,6 @@ Otherwise the original `kill-line' will be called with ARG.
 
 The flag `kill-whole-line' will be followed."
   (interactive)
-  (when kill-whole-line
-    (beginning-of-line))
   (let* ((savepos (point))
          (end (line-end-position))
          (onblock (save-excursion
