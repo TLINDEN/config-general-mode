@@ -1,3 +1,6 @@
+> [!CAUTION]
+> This software is now being maintained on [Codeberg](https://codeberg.org/scip/config-general-mode/).
+
 # config-general-mode - Emacs major editing mode for Config::General config files.
 
 [![MELPA](http://melpa.org/packages/config-general-mode-badge.svg)](http://melpa.org/#/config-general-mode)
