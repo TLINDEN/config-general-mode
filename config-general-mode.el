@@ -22,7 +22,7 @@
 ;; Version: 0.03
 ;; Author: T.v.Dein <tlinden@cpan.org>
 ;; Keywords: files
-;; URL: https://github.com/tlinden/config-general-mode
+;; URL: https://codeberg.org/scip/config-general-mode
 ;; License: GNU General Public License >= 2
 
 ;;; Commentary:

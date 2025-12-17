@@ -4,7 +4,7 @@
 
 ## Screenshot
 
-![demo](https://raw.githubusercontent.com/TLINDEN/config-general-mode/master/config-general-screenshot.png)
+![demo](config-general-screenshot.png)
 
 
 ## Introduction
@@ -94,5 +94,5 @@ USA
     - Version: 0.01
     - Author: T.v.Dein <tlinden AT cpan DOT org>
     - Keywords: config file editing
-    - URL: https://github.com/tlinden/config-general-mode
+    - URL: https://codeberg.org/scip/config-general-mode
     - License: GNU General Public License >= 2
